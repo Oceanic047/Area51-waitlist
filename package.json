@@ -1,0 +1,15 @@
+{
+  "name": "area51-waitlist",
+  "version": "1.0.0",
+  "description": "A sleek, futuristic landing page for Area51 with a dark, mysterious theme and neon accents.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "three": "^0.182.0"
+  }
+}
