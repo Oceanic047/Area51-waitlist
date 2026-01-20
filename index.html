@@ -348,7 +348,14 @@
 
         // Update countdown every second
         updateCountdown();
-        setInterval(updateCountdown, 1000);
+        const countdownInterval = setInterval(updateCountdown, 1000);
+        
+        // Clear interval when page is hidden to prevent memory leaks
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                clearInterval(countdownInterval);
+            }
+        });
 
         // Form submission handler
         document.getElementById('waitlistForm').addEventListener('submit', function(e) {
@@ -365,7 +372,16 @@
             };
 
             // Get existing waitlist or create new one
-            let waitlist = JSON.parse(localStorage.getItem('area51Waitlist') || '[]');
+            let waitlist = [];
+            try {
+                waitlist = JSON.parse(localStorage.getItem('area51Waitlist') || '[]');
+                if (!Array.isArray(waitlist)) {
+                    waitlist = [];
+                }
+            } catch (e) {
+                console.error('Error parsing waitlist data:', e);
+                waitlist = [];
+            }
             waitlist.push(waitlistData);
             localStorage.setItem('area51Waitlist', JSON.stringify(waitlist));
 
