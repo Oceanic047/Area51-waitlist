@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Area51 - Unlock the Secrets</title>
+    
+    <!-- Import Map: Tells the browser where to find Three.js module -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "./node_modules/three/build/three.module.js"
+        }
+    }
+    </script>
+    
     <style>
         * {
             margin: 0;
@@ -525,7 +535,8 @@
         // THREE.JS IMPORTS
         // ========================================
         // Import Three.js core library for 3D graphics
-        import * as THREE from './node_modules/three/build/three.module.js';
+        // The 'three' module is resolved using the import map defined in the <head>
+        import * as THREE from 'three';
         
         // Import OrbitControls for interactive camera control (rotate, zoom, pan)
         import { OrbitControls } from './node_modules/three/examples/jsm/controls/OrbitControls.js';
@@ -652,15 +663,14 @@
         
         const ufoLights = [];
         lightPositions.forEach(pos => {
+            // MeshBasicMaterial doesn't support emissive - it's already self-illuminating
             const lightMaterial = new THREE.MeshBasicMaterial({
-                color: pos.color,
-                emissive: pos.color,
-                emissiveIntensity: 1
+                color: pos.color
             });
             const light = new THREE.Mesh(lightGeometry, lightMaterial);
             light.position.set(pos.x, pos.y, pos.z);
             ufoGroup.add(light);
-            ufoLights.push({ mesh: light, originalIntensity: 1 });
+            ufoLights.push({ mesh: light, originalColor: pos.color });
         });
         
         // --- UFO BEAM (Cone of light beneath) ---
@@ -699,10 +709,11 @@
             // Rotate the beam
             beam.rotation.y += 0.01;
             
-            // Animate UFO lights (blinking effect)
+            // Animate UFO lights (blinking effect by changing opacity)
             ufoLights.forEach((light, index) => {
-                const intensity = 0.5 + Math.sin(time * 2 + index) * 0.5;
-                light.mesh.material.emissiveIntensity = intensity;
+                const opacity = 0.5 + Math.sin(time * 2 + index) * 0.5;
+                light.mesh.material.opacity = opacity;
+                light.mesh.material.transparent = true;
             });
             
             // Pulse the beam light
