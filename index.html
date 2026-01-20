@@ -3,7 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Area51 - Unlock the Unknown</title>
+    <title>Area51 - Unlock the Secrets</title>
+    
+    <!-- Import Map: Tells the browser where to find Three.js module -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "./node_modules/three/build/three.module.js"
+        }
+    }
+    </script>
+    
     <style>
         * {
             margin: 0;
@@ -20,14 +30,25 @@
             position: relative;
         }
 
-        /* Canvas for space background */
-        #space-canvas {
+        /* Canvas for Three.js 3D scene (UFO) */
+        #threejs-canvas {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             z-index: 0;
+        }
+
+        /* Canvas for space background (stars) */
+        #space-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
         }
 
         /* Alien glyphs container */
@@ -65,12 +86,17 @@
         /* Content container */
         .content {
             position: relative;
-            z-index: 2;
+            z-index: 10;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
+            pointer-events: none;
+        }
+
+        .content * {
+            pointer-events: auto;
         }
 
         .container {
@@ -80,105 +106,23 @@
             position: relative;
         }
 
-        /* UFO container */
-        #ufo-container {
-            height: 250px;
-            margin-bottom: 30px;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .ufo {
-            width: 180px;
-            height: 180px;
-            position: relative;
-            animation: ufoHover 3s ease-in-out infinite;
-        }
-
-        @keyframes ufoHover {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-15px); }
-        }
-
-        .ufo-disc {
-            width: 180px;
-            height: 40px;
-            background: linear-gradient(180deg, #00ff7f 0%, #008f5c 50%, #00ff7f 100%);
-            border-radius: 50%;
-            position: relative;
-            box-shadow: 
-                0 0 30px rgba(0, 255, 127, 0.8),
-                0 0 60px rgba(0, 255, 127, 0.4),
-                inset 0 0 20px rgba(0, 255, 127, 0.3);
-            animation: ufoRotate 4s linear infinite;
-        }
-
-        @keyframes ufoRotate {
-            0% { transform: rotateZ(0deg); }
-            100% { transform: rotateZ(360deg); }
-        }
-
-        .ufo-dome {
-            width: 90px;
-            height: 45px;
-            background: radial-gradient(circle at 50% 100%, rgba(138, 43, 226, 0.9), rgba(138, 43, 226, 0.4));
-            border-radius: 50% 50% 0 0;
-            position: absolute;
-            top: -30px;
+        /* Info text for 3D interaction */
+        .interaction-hint {
+            position: fixed;
+            top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            box-shadow: 
-                0 0 20px rgba(138, 43, 226, 0.8),
-                inset 0 -10px 20px rgba(138, 43, 226, 0.4);
+            z-index: 5;
+            font-size: 12px;
+            color: rgba(0, 255, 127, 0.6);
+            text-align: center;
+            text-shadow: 0 0 10px rgba(0, 255, 127, 0.8);
+            animation: fadeInOut 3s ease-in-out infinite;
         }
 
-        .ufo-lights {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-        }
-
-        .ufo-light {
-            position: absolute;
-            width: 12px;
-            height: 12px;
-            background: radial-gradient(circle, #00ff7f, transparent);
-            border-radius: 50%;
-            box-shadow: 0 0 15px #00ff7f;
-            animation: lightBlink 1s ease-in-out infinite;
-        }
-
-        .ufo-light:nth-child(1) { top: 50%; left: 10%; animation-delay: 0s; }
-        .ufo-light:nth-child(2) { top: 30%; left: 30%; animation-delay: 0.2s; }
-        .ufo-light:nth-child(3) { top: 30%; right: 30%; animation-delay: 0.4s; }
-        .ufo-light:nth-child(4) { top: 50%; right: 10%; animation-delay: 0.6s; }
-        .ufo-light:nth-child(5) { bottom: 40%; left: 20%; animation-delay: 0.8s; background: radial-gradient(circle, #8a2be2, transparent); box-shadow: 0 0 15px #8a2be2; }
-        .ufo-light:nth-child(6) { bottom: 40%; right: 20%; animation-delay: 1s; background: radial-gradient(circle, #8a2be2, transparent); box-shadow: 0 0 15px #8a2be2; }
-
-        @keyframes lightBlink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-
-        .ufo-beam {
-            width: 150px;
-            height: 200px;
-            background: linear-gradient(180deg, rgba(0, 255, 127, 0.3) 0%, rgba(0, 255, 127, 0.05) 100%);
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            clip-path: polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%);
-            animation: beamPulse 2s ease-in-out infinite;
-        }
-
-        @keyframes beamPulse {
+        @keyframes fadeInOut {
             0%, 100% { opacity: 0.3; }
-            50% { opacity: 0.7; }
+            50% { opacity: 0.8; }
         }
 
         .logo {
@@ -461,26 +405,7 @@
                 padding: 15px;
             }
 
-            #ufo-container {
-                height: 180px;
-                margin-bottom: 20px;
-            }
 
-            .ufo {
-                width: 140px;
-                height: 140px;
-            }
-
-            .ufo-disc {
-                width: 140px;
-                height: 32px;
-            }
-
-            .ufo-dome {
-                width: 70px;
-                height: 35px;
-                top: -25px;
-            }
 
             .countdown-item {
                 min-width: 70px;
@@ -506,25 +431,7 @@
                 font-size: 22px;
             }
 
-            #ufo-container {
-                height: 150px;
-            }
 
-            .ufo {
-                width: 120px;
-                height: 120px;
-            }
-
-            .ufo-disc {
-                width: 120px;
-                height: 28px;
-            }
-
-            .ufo-dome {
-                width: 60px;
-                height: 30px;
-                top: -22px;
-            }
 
             .countdown {
                 gap: 10px;
@@ -550,35 +457,25 @@
     </style>
 </head>
 <body>
-    <!-- Canvas for space background -->
+    <!-- Three.js canvas for interactive 3D UFO -->
+    <canvas id="threejs-canvas"></canvas>
+    
+    <!-- Canvas for space background with stars -->
     <canvas id="space-canvas"></canvas>
+
+    <!-- Interaction hint -->
+    <div class="interaction-hint">
+        ◊ DRAG TO ROTATE • SCROLL TO ZOOM • RIGHT-CLICK TO PAN ◊
+    </div>
 
     <!-- Alien glyphs -->
     <div class="alien-glyphs" id="alien-glyphs"></div>
 
     <div class="content">
         <div class="container">
-            <!-- UFO -->
-            <div id="ufo-container">
-                <div class="ufo">
-                    <div class="ufo-disc">
-                        <div class="ufo-dome"></div>
-                        <div class="ufo-lights">
-                            <div class="ufo-light"></div>
-                            <div class="ufo-light"></div>
-                            <div class="ufo-light"></div>
-                            <div class="ufo-light"></div>
-                            <div class="ufo-light"></div>
-                            <div class="ufo-light"></div>
-                        </div>
-                    </div>
-                    <div class="ufo-beam"></div>
-                </div>
-            </div>
-
             <div class="logo">AREA51</div>
-            <h1>Unlock the Unknown at Area51</h1>
-            <p class="subheadline">Join the waitlist and be the first to explore.</p>
+            <h1>Unlock the Secrets of Area51</h1>
+            <p class="subheadline">Join the waitlist. First contact is coming.</p>
             
             <div class="countdown" id="countdown">
                 <div class="countdown-item">
@@ -631,6 +528,225 @@
             <p class="footer-text">Coming Soon • The Truth Awaits</p>
         </div>
     </div>
+
+    <!-- Three.js ES6 Module Script -->
+    <script type="module">
+        // ========================================
+        // THREE.JS IMPORTS
+        // ========================================
+        // Import Three.js core library for 3D graphics
+        // The 'three' module is resolved using the import map defined in the <head>
+        import * as THREE from 'three';
+        
+        // Import OrbitControls for interactive camera control (rotate, zoom, pan)
+        import { OrbitControls } from './node_modules/three/examples/jsm/controls/OrbitControls.js';
+
+        // ========================================
+        // THREE.JS SCENE SETUP
+        // ========================================
+        
+        // Create the 3D scene - this is the container for all 3D objects
+        const scene = new THREE.Scene();
+        
+        // Create the camera with perspective projection
+        // Parameters: Field of View (75°), Aspect Ratio, Near clipping plane, Far clipping plane
+        const camera = new THREE.PerspectiveCamera(
+            75, 
+            window.innerWidth / window.innerHeight, 
+            0.1, 
+            1000
+        );
+        
+        // Position the camera to view the UFO from a good angle
+        camera.position.set(0, 2, 5);
+        
+        // Create the WebGL renderer and attach it to our canvas
+        const canvas = document.getElementById('threejs-canvas');
+        const renderer = new THREE.WebGLRenderer({ 
+            canvas: canvas,
+            alpha: true,  // Transparent background to show stars behind
+            antialias: true  // Smooth edges
+        });
+        
+        // Set renderer size to fill the window
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);  // Handle high-DPI displays
+        
+        // ========================================
+        // ORBIT CONTROLS SETUP
+        // ========================================
+        
+        // Create OrbitControls for interactive camera movement
+        // This allows users to rotate, zoom, and pan the view
+        const controls = new OrbitControls(camera, renderer.domElement);
+        
+        // Configure controls for smooth interaction
+        controls.enableDamping = true;  // Smooth camera movements
+        controls.dampingFactor = 0.05;  // Damping inertia
+        controls.minDistance = 3;  // Minimum zoom distance
+        controls.maxDistance = 15;  // Maximum zoom distance
+        controls.autoRotate = false;  // Disable auto-rotation (user controls it)
+        controls.enablePan = true;  // Allow right-click panning
+        
+        // ========================================
+        // LIGHTING SETUP
+        // ========================================
+        
+        // Add ambient light for overall scene illumination
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+        scene.add(ambientLight);
+        
+        // Add directional light from above (like sunlight)
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(5, 10, 5);
+        scene.add(directionalLight);
+        
+        // Add green point light beneath UFO for the "beam" effect
+        const beamLight = new THREE.PointLight(0x00ff7f, 2, 10);
+        beamLight.position.set(0, -1.5, 0);
+        scene.add(beamLight);
+        
+        // Add purple point light for accent
+        const accentLight = new THREE.PointLight(0x8a2be2, 1.5, 8);
+        accentLight.position.set(0, 2, 0);
+        scene.add(accentLight);
+        
+        // ========================================
+        // UFO 3D MODEL CREATION
+        // ========================================
+        
+        // Create UFO group to hold all UFO parts
+        const ufoGroup = new THREE.Group();
+        
+        // --- UFO DISC (Main Body) ---
+        // Create a flattened torus for the classic flying saucer shape
+        const discGeometry = new THREE.TorusGeometry(1.5, 0.6, 16, 32);
+        const discMaterial = new THREE.MeshStandardMaterial({
+            color: 0x00ff7f,  // Neon green color
+            emissive: 0x00ff7f,  // Self-illumination (glow)
+            emissiveIntensity: 0.5,
+            metalness: 0.8,  // Metallic appearance
+            roughness: 0.2  // Shiny surface
+        });
+        const disc = new THREE.Mesh(discGeometry, discMaterial);
+        disc.rotation.x = Math.PI / 2;  // Rotate to horizontal
+        disc.scale.y = 0.3;  // Flatten the torus
+        ufoGroup.add(disc);
+        
+        // --- UFO DOME (Cockpit) ---
+        // Create a hemisphere for the UFO's dome/cockpit
+        const domeGeometry = new THREE.SphereGeometry(0.8, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+        const domeMaterial = new THREE.MeshStandardMaterial({
+            color: 0x8a2be2,  // Purple color
+            emissive: 0x8a2be2,
+            emissiveIntensity: 0.4,
+            metalness: 0.5,
+            roughness: 0.3,
+            transparent: true,
+            opacity: 0.8  // Semi-transparent dome
+        });
+        const dome = new THREE.Mesh(domeGeometry, domeMaterial);
+        dome.position.y = 0.2;
+        ufoGroup.add(dome);
+        
+        // --- UFO LIGHTS ---
+        // Create small spheres around the disc as blinking lights
+        const lightGeometry = new THREE.SphereGeometry(0.1, 16, 16);
+        const lightPositions = [
+            { x: 1.8, y: 0, z: 0, color: 0x00ff7f },
+            { x: -1.8, y: 0, z: 0, color: 0x00ff7f },
+            { x: 0, y: 0, z: 1.8, color: 0x8a2be2 },
+            { x: 0, y: 0, z: -1.8, color: 0x8a2be2 },
+            { x: 1.3, y: 0, z: 1.3, color: 0x00ff7f },
+            { x: -1.3, y: 0, z: -1.3, color: 0x00ff7f }
+        ];
+        
+        const ufoLights = [];
+        lightPositions.forEach(pos => {
+            // MeshBasicMaterial doesn't support emissive - it's already self-illuminating
+            const lightMaterial = new THREE.MeshBasicMaterial({
+                color: pos.color
+            });
+            const light = new THREE.Mesh(lightGeometry, lightMaterial);
+            light.position.set(pos.x, pos.y, pos.z);
+            ufoGroup.add(light);
+            ufoLights.push({ mesh: light, originalColor: pos.color });
+        });
+        
+        // --- UFO BEAM (Cone of light beneath) ---
+        const beamGeometry = new THREE.ConeGeometry(1.5, 3, 32, 1, true);
+        const beamMaterial = new THREE.MeshBasicMaterial({
+            color: 0x00ff7f,
+            transparent: true,
+            opacity: 0.15,
+            side: THREE.DoubleSide
+        });
+        const beam = new THREE.Mesh(beamGeometry, beamMaterial);
+        beam.position.y = -1.5;
+        ufoGroup.add(beam);
+        
+        // Add the complete UFO to the scene
+        scene.add(ufoGroup);
+        
+        // ========================================
+        // ANIMATION LOOP
+        // ========================================
+        
+        let time = 0;
+        
+        // Main animation function - called every frame
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            time += 0.01;
+            
+            // Rotate the UFO disc slowly for visual interest
+            disc.rotation.z += 0.005;
+            
+            // Gentle bobbing motion for the UFO
+            ufoGroup.position.y = Math.sin(time) * 0.2;
+            
+            // Rotate the beam
+            beam.rotation.y += 0.01;
+            
+            // Animate UFO lights (blinking effect by changing opacity)
+            ufoLights.forEach((light, index) => {
+                const opacity = 0.5 + Math.sin(time * 2 + index) * 0.5;
+                light.mesh.material.opacity = opacity;
+                light.mesh.material.transparent = true;
+            });
+            
+            // Pulse the beam light
+            beamLight.intensity = 1.5 + Math.sin(time * 2) * 0.5;
+            
+            // Pulse the beam opacity
+            beam.material.opacity = 0.1 + Math.sin(time * 2) * 0.05;
+            
+            // Update controls for smooth interaction
+            controls.update();
+            
+            // Render the scene from the camera's perspective
+            renderer.render(scene, camera);
+        }
+        
+        // Start the animation loop
+        animate();
+        
+        // ========================================
+        // WINDOW RESIZE HANDLER
+        // ========================================
+        
+        // Handle window resize to keep the canvas responsive
+        window.addEventListener('resize', () => {
+            // Update camera aspect ratio
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            
+            // Update renderer size
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+    </script>
 
     <script>
         // ========== CANVAS SPACE BACKGROUND ==========
